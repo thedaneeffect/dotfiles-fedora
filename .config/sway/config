@@ -1,0 +1,203 @@
+# Sway config - migrated from i3
+# See `man 5 sway` for a complete reference
+
+set $mod Mod4
+
+# Font for window titles and bar
+font pango:ProggyCleanTT 12
+
+# Autostart
+exec dex-autostart --autostart --environment sway
+exec lxpolkit
+exec gnome-keyring-daemon --start --components=secrets,pkcs11
+exec mako
+
+# Idle/lock (replaces xss-lock + i3lock)
+exec swayidle -w \
+    timeout 300 'swaylock -f' \
+    timeout 600 'swaymsg "output * power off"' \
+    resume 'swaymsg "output * power on"' \
+    before-sleep 'swaylock -f'
+
+# NetworkManager applet (--indicator needed for Wayland tray)
+exec nm-applet --indicator
+
+# Keyboard: repeat rate (replaces xset r rate 300 30)
+input * repeat_delay 300
+input * repeat_rate 30
+
+# Keyboard: swap alt and win (replaces setxkbmap -option altwin:swap_alt_win)
+input * xkb_options altwin:swap_alt_win
+
+# Wallpaper - restore last used, Fn key for random
+bindsym XF86Favorites exec ~/.local/bin/random-wallpaper
+exec_always swaymsg "output * bg $HOME/.cache/wallpaper.jpg fill"
+
+# Dark theme
+exec gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+exec gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
+
+# Touchpad: natural scrolling (replaces xinput set-prop)
+input type:touchpad natural_scroll enabled
+
+# Hide title bars, use 1px border
+default_border pixel 1
+hide_edge_borders smart
+
+# Volume controls (dunstify -> notify-send for mako compatibility)
+set $refresh_i3status killall -SIGUSR1 i3status
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status && V=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1) && notify-send -r 1000 -u low -h int:value:$V "Volume: $V%"
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status && V=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1) && notify-send -r 1000 -u low -h int:value:$V "Volume: $V%"
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status && notify-send -r 1000 -u low "Volume: Mute toggled"
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status && notify-send -r 1000 -u low "Mic: Mute toggled"
+
+# Screen brightness controls
+bindsym XF86MonBrightnessUp exec brightnessctl set +5% && B=$(brightnessctl -m | grep -oP '\d+(?=%)') && notify-send -r 1001 -u low -h int:value:$B "Brightness: $B%"
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%- && B=$(brightnessctl -m | grep -oP '\d+(?=%)') && notify-send -r 1001 -u low -h int:value:$B "Brightness: $B%"
+
+# Screenshots
+bindsym Print exec grim - | wl-copy && notify-send -u low "Screenshot" "Copied to clipboard"
+bindsym $mod+Print exec grim -g "$(slurp)" - | wl-copy && notify-send -u low "Screenshot" "Region copied to clipboard"
+bindsym $mod+Shift+Print exec grim -g "$(swaymsg -t get_tree | jq -r '.. | select(.focused?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')" - | wl-copy && notify-send -u low "Screenshot" "Window copied to clipboard"
+
+# Use Mouse+$mod to drag floating windows
+floating_modifier $mod normal
+
+# Start a terminal
+bindsym $mod+Return exec kitty
+
+# Kill focused window
+bindsym $mod+Shift+q kill
+
+# Application launcher (fzf in floating kitty)
+for_window [app_id="fzf-launcher"] floating enable, resize set 70 ppt 80 ppt, move position center
+bindsym $mod+d exec kitty --class fzf-launcher ~/.local/bin/fzf-launcher
+bindsym $mod+Shift+d exec ~/.local/bin/dmenu-new-workspace
+
+# Change focus
+bindsym $mod+j focus left
+bindsym $mod+k focus down
+bindsym $mod+l exec wtype -M ctrl -P l -m ctrl
+bindsym $mod+semicolon focus right
+
+# Alternatively, use cursor keys
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move focused window
+bindsym $mod+Shift+j move left
+bindsym $mod+Shift+k move down
+bindsym $mod+Shift+l move up
+bindsym $mod+Shift+semicolon move right
+
+# Alternatively, use cursor keys
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Split orientation
+bindsym $mod+h split h
+bindsym $mod+v split v
+
+# Fullscreen
+bindsym $mod+f fullscreen toggle
+
+# Change container layout
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# Toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# Change focus between tiling / floating
+bindsym $mod+space focus mode_toggle
+
+# Focus parent container
+bindsym $mod+a focus parent
+
+# Workspaces
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+# Switch to workspace
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+
+# Move container to workspace
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+bindsym $mod+Shift+6 move container to workspace number $ws6
+bindsym $mod+Shift+7 move container to workspace number $ws7
+bindsym $mod+Shift+8 move container to workspace number $ws8
+bindsym $mod+Shift+9 move container to workspace number $ws9
+bindsym $mod+Shift+0 move container to workspace number $ws10
+
+# Reload config
+bindsym $mod+Shift+c reload
+# Sway doesn't have in-place restart like i3, reload is equivalent
+bindsym $mod+Shift+r reload
+# Exit sway (replaces i3-nagbar)
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+
+# Resize mode
+mode "resize" {
+        bindsym j resize grow width 10 ppt
+        bindsym k resize shrink height 10 ppt
+        bindsym l resize grow height 10 ppt
+        bindsym semicolon resize shrink width 10 ppt
+
+        bindsym Left resize grow width 10 ppt
+        bindsym Down resize shrink height 10 ppt
+        bindsym Up resize grow height 10 ppt
+        bindsym Right resize shrink width 10 ppt
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+r mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+# Gruvbox Dark Hard Contrast
+client.focused          #8ec07c #8ec07c #1d2021 #fabd2f   #8ec07c
+client.focused_inactive #3c3836 #3c3836 #a89984 #3c3836   #3c3836
+client.unfocused        #1d2021 #1d2021 #665c54 #1d2021   #1d2021
+client.urgent           #fb4934 #fb4934 #ebdbb2 #fb4934   #fb4934
+
+bar {
+  colors {
+    background #1d2021
+    statusline #ebdbb2
+    separator  #665c54
+
+    focused_workspace  #8ec07c #8ec07c #1d2021
+    active_workspace   #504945 #504945 #ebdbb2
+    inactive_workspace #1d2021 #1d2021 #a89984
+    urgent_workspace   #fb4934 #fb4934 #ebdbb2
+    binding_mode       #fabd2f #fabd2f #1d2021
+  }
+  status_command i3status
+}

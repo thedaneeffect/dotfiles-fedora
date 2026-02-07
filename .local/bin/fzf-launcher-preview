@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Preview script for fzf-launcher
+# Fallback chain: tldr -> man -> .desktop -> DuckDuckGo (cached 7 days)
+
+cmd="$1"
+TLDR="$HOME/.local/share/mise/shims/tldr"
+CACHE_DIR="$HOME/.cache/fzf-launcher"
+DESKTOP_DIRS=("$HOME/.local/share/applications" /usr/share/applications /var/lib/flatpak/exports/share/applications)
+
+# 1) tldr — concise cheatsheet
+if "$TLDR" "$cmd" 2>/dev/null; then
+    exit 0
+fi
+
+# 2) man — full manual page as plain text
+if man_out=$(man "$cmd" 2>/dev/null) && [ -n "$man_out" ]; then
+    echo "$man_out" | col -b
+    exit 0
+fi
+
+# 3) .desktop file — covers GUI apps
+for dir in "${DESKTOP_DIRS[@]}"; do
+    # Try exact name match first, then grep Exec= lines
+    desktop_file="$dir/$cmd.desktop"
+    if [ ! -f "$desktop_file" ]; then
+        desktop_file=$(grep -ril "^Exec=.*/$cmd\b\|^Exec=$cmd\b" "$dir"/*.desktop 2>/dev/null | head -1)
+    fi
+    if [ -f "$desktop_file" ]; then
+        name=$(grep -m1 '^Name=' "$desktop_file" | cut -d= -f2-)
+        generic=$(grep -m1 '^GenericName=' "$desktop_file" | cut -d= -f2-)
+        comment=$(grep -m1 '^Comment=' "$desktop_file" | cut -d= -f2-)
+        categories=$(grep -m1 '^Categories=' "$desktop_file" | cut -d= -f2- | tr ';' ', ' | sed 's/, $//')
+        [ -n "$name" ] && echo "$name"
+        [ -n "$generic" ] && echo "$generic"
+        [ -n "$comment" ] && echo && echo "$comment"
+        [ -n "$categories" ] && echo && echo "Categories: $categories"
+        exit 0
+    fi
+done
+
+# 4) RPM package description — covers obscure system helpers
+if cmd_path=$(command -v "$cmd" 2>/dev/null); then
+    if pkg=$(rpm -qf "$cmd_path" 2>/dev/null); then
+        pkg_info=$(rpm -qi "$pkg" 2>/dev/null)
+        summary=$(echo "$pkg_info" | grep -m1 '^Summary' | sed 's/^Summary *: *//')
+        description=$(echo "$pkg_info" | sed -n '/^Description/,/^$/{ /^Description/d; p; }')
+        if [ -n "$summary" ]; then
+            echo "$cmd"
+            echo "Package: $pkg"
+            echo
+            echo "$summary"
+            [ -n "$description" ] && echo && echo "$description"
+            exit 0
+        fi
+    fi
+fi
+
+# 5) DuckDuckGo Instant Answer API (cached 7 days)
+mkdir -p "$CACHE_DIR"
+cache_file="$CACHE_DIR/$cmd"
+
+if [ -f "$cache_file" ] && [ -n "$(find "$cache_file" -mtime -7 2>/dev/null)" ]; then
+    cat "$cache_file"
+    exit 0
+fi
+
+result=$(curl -s --max-time 3 "https://api.duckduckgo.com/?q=$cmd+linux+command&format=json&no_html=1" 2>/dev/null)
+abstract=$(echo "$result" | jq -r '.AbstractText // empty' 2>/dev/null)
+
+if [ -n "$abstract" ]; then
+    {
+        echo "$cmd"
+        echo
+        echo "$abstract"
+        source_url=$(echo "$result" | jq -r '.AbstractURL // empty' 2>/dev/null)
+        [ -n "$source_url" ] && echo && echo "Source: $source_url"
+    } | tee "$cache_file"
+    exit 0
+fi
+
+echo "No documentation found for '$cmd'"

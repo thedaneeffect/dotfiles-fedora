@@ -1,0 +1,21 @@
+#!/bin/bash
+# Create a named symlink to the current wallpaper
+WALLPAPER="$HOME/.cache/wallpaper.jpg"
+DEST_DIR="$HOME/pictures/wallpapers"
+
+if [ -z "$1" ]; then
+    echo "Usage: save-wallpaper <name>"
+    exit 1
+fi
+
+target=$(readlink -f "$WALLPAPER")
+
+if [ ! -f "$target" ]; then
+    echo "No wallpaper found"
+    exit 1
+fi
+
+ext="${target##*.}"
+dest="$DEST_DIR/$1.$ext"
+ln -sf "$target" "$dest"
+echo "Saved $dest -> $target"

@@ -1,0 +1,34 @@
+#!/bin/bash
+# Fetch a random wallpaper at 2x current resolution and set it in sway
+# Skips images we've already seen (up to 10 retries)
+WALLPAPER_DIR="$HOME/pictures/wallpapers"
+CACHE="$HOME/.cache/wallpaper.jpg"
+read -r W H < <(swaymsg -t get_outputs | jq -r '.[0] | "\(.current_mode.width) \(.current_mode.height)"')
+W=$((W * 2))
+H=$((H * 2))
+
+for i in $(seq 1 10); do
+    redirect=$(curl -s -o /dev/null -w '%{redirect_url}' "https://picsum.photos/${W}/${H}")
+    id=$(echo "$redirect" | grep -oP '/id/\K[0-9]+')
+
+    if [ -z "$id" ]; then
+        continue
+    fi
+
+    # Check if we already have this image
+    if ls "$WALLPAPER_DIR"/${id}-*.jpg &>/dev/null; then
+        continue
+    fi
+
+    filename="${id}-${W}x${H}.jpg"
+    curl -sL "$redirect" -o "$WALLPAPER_DIR/$filename" && \
+        ln -sf "$WALLPAPER_DIR/$filename" "$CACHE" && \
+        swaymsg "output * bg $CACHE fill"
+    exit 0
+done
+
+# Exhausted retries, use whatever we got last
+if [ -n "$redirect" ]; then
+    curl -sL "$redirect" -o "$CACHE" && \
+        swaymsg "output * bg $CACHE fill"
+fi

@@ -1,0 +1,35 @@
+theme='gruvbox'
+
+[editor]
+line-number="relative"
+completion-trigger-len=1
+idle-timeout=0
+true-color = true
+auto-save = true
+bufferline = "multiple"
+rulers = [80, 120]
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+
+[editor.file-picker]
+hidden = false
+
+[editor.lsp]
+display-messages = true
+
+[editor.whitespace.render]
+tab="all"
+newline="all"
+
+[editor.whitespace.characters]
+tab=">"
+newline="¬"
+
+[editor.indent-guides]
+render=true
+character='┆'
+
+[editor.soft-wrap]
+enable = true

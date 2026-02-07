@@ -1,0 +1,30 @@
+[tools]
+bun = "latest"
+claude-code = "latest"
+fd = "latest"
+fzf = "latest"
+gh = "latest"
+go = "latest"
+helix = "latest"
+rust = "latest"
+rg = "latest"
+bat = "latest"
+starship = "latest"
+eza = "latest"
+zoxide = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
+btop = "latest"
+tlrc = "latest"
+gofumpt = "latest"
+golangci-lint = "latest"
+golines = "latest"
+glow = "latest"
+"go:github.com/go-delve/delve/cmd/dlv" = "latest"
+jq = "latest"
+duf = "latest"
+delta = "latest"
+
+[settings]
+
+[settings.npm]
+bun = true

@@ -1,0 +1,53 @@
+# Gruvbox Dark theme for mako
+
+# Layout
+max-visible=3
+anchor=top-right
+layer=overlay
+
+# Appearance
+font=Terminus 12
+width=350
+height=150
+margin=10
+padding=15
+border-size=2
+border-radius=8
+icon-path=/usr/share/icons/Adwaita
+max-icon-size=48
+
+# Gruvbox colors
+background-color=#1d2021EE
+text-color=#ebdbb2FF
+border-color=#8ec07cFF
+progress-color=over #689d6aFF
+
+# Behavior
+default-timeout=3000
+ignore-timeout=0
+group-by=app-name
+
+# Format
+format=<b>%s</b>\n%b
+
+# Low urgency
+[urgency=low]
+background-color=#1d2021DD
+border-color=#665c54FF
+default-timeout=2000
+
+# Normal urgency
+[urgency=normal]
+background-color=#1d2021EE
+border-color=#8ec07cFF
+
+# Critical urgency
+[urgency=critical]
+background-color=#1d2021FF
+border-color=#fb4934FF
+text-color=#fb4934FF
+default-timeout=0
+
+# Grouped notifications
+[grouped]
+format=(%g) <b>%s</b>\n%b

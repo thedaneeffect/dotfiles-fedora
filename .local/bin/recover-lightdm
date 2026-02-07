@@ -1,0 +1,6 @@
+#!/bin/bash
+# Recover lightdm if greetd isn't working
+# Run from a TTY (Ctrl+Alt+F2) if needed
+sudo systemctl disable greetd.service
+sudo systemctl enable lightdm.service
+echo "LightDM restored. Reboot to apply."

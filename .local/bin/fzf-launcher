@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# fzf-based application launcher for sway
+# Replaces wmenu-run with fuzzy, case-insensitive matching
+
+FZF="$HOME/.local/share/mise/shims/fzf"
+TLDR="$HOME/.local/share/mise/shims/tldr"
+PREVIEW="$HOME/.local/bin/fzf-launcher-preview"
+
+selected=$(compgen -c | sort -u | "$FZF" \
+    --prompt='run: ' \
+    --layout=reverse \
+    --no-info \
+    --bind 'change:first' \
+    --preview "$PREVIEW {}" \
+    --preview-window='right,120,wrap' \
+    --color='bg:#1d2021,fg:#ebdbb2,hl:#8ec07c,bg+:#3c3836,fg+:#ebdbb2,hl+:#8ec07c,prompt:#fabd2f,pointer:#fb4934,marker:#b8bb26')
+
+[ -n "$selected" ] && swaymsg exec -- "$selected"

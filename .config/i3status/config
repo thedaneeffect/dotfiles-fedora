@@ -1,0 +1,61 @@
+general {
+        colors = true
+        color_good = "#8ec07c"
+        color_degraded = "#fabd2f"
+        color_bad = "#fb4934"
+        interval = 5
+}
+
+order += "wireless _first_"
+order += "ethernet _first_"
+order += "battery all"
+order += "volume master"
+order += "cpu_usage"
+order += "memory"
+order += "disk /"
+order += "tztime local"
+
+wireless _first_ {
+        format_up = "W %essid %quality"
+        format_down = ""
+}
+
+ethernet _first_ {
+        format_up = "E %ip"
+        format_down = ""
+}
+
+battery all {
+        format = "BAT %percentage %status"
+        status_chr = "CHR"
+        status_bat = "DIS"
+        status_full = "FULL"
+        low_threshold = 20
+        threshold_type = percentage
+        last_full_capacity = true
+}
+
+volume master {
+        format = "VOL %volume"
+        format_muted = "VOL MUTE"
+        device = "default"
+        mixer = "Master"
+        mixer_idx = 0
+}
+
+cpu_usage {
+        format = "CPU %usage"
+}
+
+memory {
+        format = "MEM %used"
+        threshold_degraded = "1G"
+}
+
+disk "/" {
+        format = "DSK %avail"
+}
+
+tztime local {
+        format = "%a %b %d  %H:%M"
+}

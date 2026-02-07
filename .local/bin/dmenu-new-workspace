@@ -1,0 +1,8 @@
+#!/bin/bash
+# Find the first unused workspace number and open fzf launcher there
+for n in $(seq 1 10); do
+    if ! swaymsg -t get_workspaces | grep -q "\"num\": *$n"; then
+        swaymsg "workspace number $n"
+        exec kitty --class fzf-launcher "$HOME/.local/bin/fzf-launcher"
+    fi
+done

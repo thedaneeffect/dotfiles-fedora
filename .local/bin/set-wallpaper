@@ -1,0 +1,23 @@
+#!/bin/bash
+# Set wallpaper from ~/pictures/wallpapers/{name} (auto-resolves extension)
+# With no args, opens fzf picker. With a name arg, sets directly.
+WALLPAPER_DIR="$HOME/pictures/wallpapers"
+CACHE="$HOME/.cache/wallpaper.jpg"
+
+if [ -z "$1" ]; then
+    match=$(find "$WALLPAPER_DIR" -maxdepth 1 \( -type f -o -type l \) | sort -V | \
+        fzf --preview 'file={}; kitten icat --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$file"' \
+            --preview-window=right:60% \
+            --prompt="Wallpaper> ")
+    [ -z "$match" ] && exit 0
+else
+    match=$(find "$WALLPAPER_DIR" -maxdepth 1 -name "$1.*" \( -type f -o -type l \) | head -1)
+    if [ -z "$match" ]; then
+        echo "No wallpaper found matching '$1' in $WALLPAPER_DIR"
+        exit 1
+    fi
+fi
+
+ln -sf "$match" "$CACHE"
+swaymsg "output * bg $match fill"
+echo "Set wallpaper to $match"
