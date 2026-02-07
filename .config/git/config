@@ -1,7 +1,7 @@
 [user]
 	name = dane
 	email = dane@medieval.software
-	signingkey = 7B5FC82E53B5ABE6
+	signingkey = 85EB043787B436C1
 
 [init]
 	defaultBranch = main
