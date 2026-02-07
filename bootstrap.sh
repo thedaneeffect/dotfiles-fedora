@@ -3,7 +3,42 @@ set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 
-# Files/dirs to symlink, relative to $HOME
+# ============================================================================
+# System packages
+# ============================================================================
+echo "==> Updating dnf and installing packages..."
+sudo dnf upgrade -y --refresh
+sudo dnf install -y \
+    sway swayidle swaylock swaybg \
+    kitty \
+    mako \
+    i3status \
+    grim slurp wtype wl-clipboard \
+    distrobox git procs \
+    https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
+    https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
+
+# ============================================================================
+# Fonts
+# ============================================================================
+echo "==> Installing fonts..."
+mkdir -p "$HOME/.local/share/fonts"
+for font in "$DOTFILES"/fonts/*; do
+    dest="$HOME/.local/share/fonts/$(basename "$font")"
+    if [ -f "$dest" ]; then
+        echo "OK    fonts/$(basename "$font")"
+    else
+        cp "$font" "$dest"
+        echo "COPY  fonts/$(basename "$font")"
+    fi
+done
+fc-cache -f
+
+# ============================================================================
+# Symlinks
+# ============================================================================
+echo "==> Linking config files..."
+
 files=(
     .bashrc
     .bash_profile
@@ -19,13 +54,15 @@ files=(
     .config/gh/config.yml
     .config/glow/glow.yml
     .config/btop/btop.conf
+    .config/gtk-3.0/settings.ini
+    .config/gtk-4.0/settings.ini
     .local/bin/fzf-launcher
     .local/bin/fzf-launcher-preview
     .local/bin/dmenu-new-workspace
     .local/bin/random-wallpaper
     .local/bin/set-wallpaper
     .local/bin/save-wallpaper
-    .local/bin/recover-lightdm
+    .claude/CLAUDE.md
 )
 
 for f in "${files[@]}"; do
@@ -53,6 +90,35 @@ for f in "${files[@]}"; do
     echo "LINK  $f"
 done
 
+# ============================================================================
+# mise
+# ============================================================================
+if ! command -v mise &>/dev/null; then
+    echo "==> Installing mise..."
+    curl https://mise.run | sh
+fi
+echo "==> Installing mise tools..."
+mise trust "$DOTFILES/.config/mise/config.toml"
+mise install
+
+# ============================================================================
+# Proton Pass CLI
+# ============================================================================
+if ! command -v proton-pass &>/dev/null; then
+    echo "==> Installing Proton Pass CLI..."
+    curl -fsSL https://proton.me/download/pass-cli/install.sh | bash
+fi
+
+# ============================================================================
+# Optional: greetd + tuigreet login greeter
+# ============================================================================
+if gum confirm "Install greetd + tuigreet login greeter?"; then
+    sudo dnf install -y greetd greetd-tuigreet
+    sudo cp "$DOTFILES/system/greetd-config.toml" /etc/greetd/config.toml
+    sudo systemctl enable greetd.service
+    echo "DONE  greetd configured"
+fi
+
 echo
 echo "Done. Backed-up files have a .bak extension."
-echo "Run 'mise install' to install all tools."
+echo "Log out and back in (or 'source ~/.bashrc') to apply."

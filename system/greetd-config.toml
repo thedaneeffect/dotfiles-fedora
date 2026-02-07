@@ -1,0 +1,6 @@
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --cmd sway --remember --remember-session --asterisks --asterisks-char '* ' --time --time-format '%A, %B %d  %H:%M' --greeting 'Welcome back.' --greet-align center --width 50 --window-padding 2 --container-padding 2 --prompt-padding 1 --theme 'border=green;text=white;prompt=green;time=gray;action=gray;button=green;container=black;input=white;greet=white;title=green'"
+user = "greetd"

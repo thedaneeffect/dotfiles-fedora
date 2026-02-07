@@ -94,7 +94,6 @@ alias suspend='systemctl suspend'
 alias shutdown='systemctl poweroff'
 alias reboot='systemctl reboot'
 alias logout='swaymsg exit'
-alias dnf='sudo dnf'
 
 # ============================================================================
 # User specific aliases and functions

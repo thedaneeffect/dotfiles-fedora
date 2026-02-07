@@ -23,6 +23,7 @@ glow = "latest"
 jq = "latest"
 duf = "latest"
 delta = "latest"
+gum = "latest"
 
 [settings]
 
