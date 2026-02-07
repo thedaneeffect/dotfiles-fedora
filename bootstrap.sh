@@ -62,6 +62,7 @@ files=(
     .local/bin/random-wallpaper
     .local/bin/set-wallpaper
     .local/bin/save-wallpaper
+    .config/systemd/user/ssh-agent.service
     .claude/CLAUDE.md
 )
 
@@ -89,6 +90,13 @@ for f in "${files[@]}"; do
     ln -sf "$src" "$dest"
     echo "LINK  $f"
 done
+
+# ============================================================================
+# SSH agent (systemd user service)
+# ============================================================================
+echo "==> Enabling SSH agent..."
+systemctl --user daemon-reload
+systemctl --user enable --now ssh-agent.service
 
 # ============================================================================
 # mise
