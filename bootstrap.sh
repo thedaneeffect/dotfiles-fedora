@@ -14,7 +14,7 @@ sudo dnf install -y \
     mako \
     i3status \
     grim slurp wtype wl-clipboard wf-recorder ffmpeg \
-    distrobox git procs trash-cli clang \
+    distrobox git procs trash-cli clang kanshi \
     https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
     https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
 
@@ -56,6 +56,7 @@ files=(
     .config/btop/btop.conf
     .config/gtk-3.0/settings.ini
     .config/gtk-4.0/settings.ini
+    .config/kanshi/config
     .config/mpv/mpv.conf
     .local/bin/fzf-launcher
     .local/bin/fzf-launcher-preview

@@ -15,6 +15,7 @@ exec mako
 exec systemctl --user restart xdg-desktop-portal-gtk.service
 exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
 exec $HOME/.local/share/cargo/bin/autotiling-rs
+exec kanshi
 
 # Idle/lock (replaces xss-lock + i3lock)
 exec swayidle -w \
@@ -77,6 +78,10 @@ bindsym $mod+Return exec ~/.local/bin/new-terminal
 
 # Terminal workspace (toggle with $mod+`)
 bindsym $mod+grave exec ~/.local/bin/toggle-terminal
+
+# Quick calculator
+for_window [app_id="calc"] floating enable, resize set 40 ppt 30 ppt, move position center
+bindsym $mod+equal exec kitty --app-id calc python3 -ic 'from math import *'
 
 # Kill focused window
 bindsym $mod+Shift+q kill
