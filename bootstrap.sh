@@ -13,7 +13,7 @@ sudo dnf install -y \
     kitty \
     mako \
     i3status \
-    grim slurp wtype wl-clipboard \
+    grim slurp wtype wl-clipboard wf-recorder \
     distrobox git procs \
     https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
     https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
@@ -56,12 +56,14 @@ files=(
     .config/btop/btop.conf
     .config/gtk-3.0/settings.ini
     .config/gtk-4.0/settings.ini
+    .config/mpv/mpv.conf
     .local/bin/fzf-launcher
     .local/bin/fzf-launcher-preview
     .local/bin/dmenu-new-workspace
     .local/bin/random-wallpaper
     .local/bin/set-wallpaper
     .local/bin/save-wallpaper
+    .local/bin/capture-menu
     .config/systemd/user/ssh-agent.service
     .claude/CLAUDE.md
 )

@@ -55,10 +55,9 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle && $
 bindsym XF86MonBrightnessUp exec brightnessctl set +5% && B=$(brightnessctl -m | grep -oP '\d+(?=%)') && notify-send -r 1001 -u low -h int:value:$B "Brightness: $B%"
 bindsym XF86MonBrightnessDown exec brightnessctl set 5%- && B=$(brightnessctl -m | grep -oP '\d+(?=%)') && notify-send -r 1001 -u low -h int:value:$B "Brightness: $B%"
 
-# Screenshots
-bindsym Print exec grim - | wl-copy && notify-send -u low "Screenshot" "Copied to clipboard"
-bindsym $mod+Print exec grim -g "$(slurp)" - | wl-copy && notify-send -u low "Screenshot" "Region copied to clipboard"
-bindsym $mod+Shift+Print exec grim -g "$(swaymsg -t get_tree | jq -r '.. | select(.focused?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')" - | wl-copy && notify-send -u low "Screenshot" "Window copied to clipboard"
+# Capture menu (screenshots + recording)
+for_window [app_id="capture-menu"] floating enable, resize set 400 300, move position center
+bindsym Print exec ~/.local/bin/capture-menu
 
 # Use Mouse+$mod to drag floating windows
 floating_modifier $mod normal

@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCREENSHOTS_DIR="$HOME/pictures/screenshots"
+RECORDINGS_DIR="$HOME/videos/recordings"
+STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/capture-last"
+CHOICE_FILE=/tmp/capture-choice
+GEOM_FILE=/tmp/capture-window-geom
+GUM="$HOME/.local/share/mise/shims/gum"
+JQ="$HOME/.local/share/mise/shims/jq"
+
+# --- TUI mode: just render menu, write choice, exit ---
+if [[ "${1:-}" == "--tui" ]]; then
+    rm -f "$CHOICE_FILE"
+
+    LAST=""
+    [[ -f "$STATE_FILE" ]] && LAST=$(<"$STATE_FILE") || true
+
+    options=(
+        "Screenshot - Fullscreen"
+        "Screenshot - Window"
+        "Screenshot - Region"
+        "Record - Fullscreen"
+        "Record - Window"
+        "Record - Region"
+    )
+
+    menu=""
+    for i in "${!options[@]}"; do
+        n=$((i + 1))
+        marker="  "
+        [[ "$LAST" == "$n" ]] && marker="> " || true
+        menu+="${marker}${n}. ${options[$i]}"$'\n'
+    done
+
+    "$GUM" style \
+        --border rounded \
+        --border-foreground 142 \
+        --foreground 223 \
+        --padding "0 1" \
+        --margin "0" \
+        "$menu"
+
+    read -rsn1 key
+
+    # Enter re-runs last selection
+    if [[ "$key" == "" && -n "$LAST" ]]; then
+        key="$LAST"
+    fi
+
+    [[ "$key" =~ ^[1-6]$ ]] || exit 0
+
+    echo "$key" > "$CHOICE_FILE"
+    echo "$key" > "$STATE_FILE"
+    exit 0
+fi
+
+# --- Orchestrator mode (called by sway binding) ---
+
+# Toggle: if recording, stop it
+if pgrep -x wf-recorder > /dev/null; then
+    pkill -SIGINT wf-recorder
+    notify-send -r 2000 -u low "Recording saved"
+    exit 0
+fi
+
+mkdir -p "$SCREENSHOTS_DIR" "$RECORDINGS_DIR" "$(dirname "$STATE_FILE")"
+
+# Save focused window geometry while correct window is focused
+swaymsg -t get_tree | "$JQ" -r '.. | select(.focused?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' > "$GEOM_FILE"
+
+# Launch menu TUI, wait for it to close
+kitty --app-id capture-menu --title Capture ~/.local/bin/capture-menu --tui
+
+# Read choice
+[[ -f "$CHOICE_FILE" ]] || exit 0
+choice=$(<"$CHOICE_FILE")
+rm -f "$CHOICE_FILE"
+
+timestamp=$(date +%Y%m%d-%H%M%S)
+geom=$(<"$GEOM_FILE")
+
+case "$choice" in
+    1)  file="$SCREENSHOTS_DIR/$timestamp.png"
+        grim "$file"
+        wl-copy -t image/png < "$file"
+        notify-send -u low "Screenshot" "Fullscreen saved & copied"
+        ;;
+    2)  file="$SCREENSHOTS_DIR/$timestamp.png"
+        grim -g "$geom" "$file"
+        wl-copy -t image/png < "$file"
+        notify-send -u low "Screenshot" "Window saved & copied"
+        ;;
+    3)  file="$SCREENSHOTS_DIR/$timestamp.png"
+        grim -g "$(slurp)" "$file"
+        wl-copy -t image/png < "$file"
+        notify-send -u low "Screenshot" "Region saved & copied"
+        ;;
+    4)  file="$RECORDINGS_DIR/$timestamp.mp4"
+        notify-send -r 2000 "Recording" "Fullscreen — Print to stop"
+        wf-recorder -f "$file"
+        ;;
+    5)  file="$RECORDINGS_DIR/$timestamp.mp4"
+        notify-send -r 2000 "Recording" "Window — Print to stop"
+        wf-recorder -g "$geom" -f "$file"
+        ;;
+    6)  file="$RECORDINGS_DIR/$timestamp.mp4"
+        region=$(slurp)
+        notify-send -r 2000 "Recording" "Region — Print to stop"
+        wf-recorder -g "$region" -f "$file"
+        ;;
+esac
