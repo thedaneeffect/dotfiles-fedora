@@ -65,6 +65,7 @@ files=(
     .local/bin/save-wallpaper
     .local/bin/capture-menu
     .local/bin/cliphist-fzf
+    .local/bin/toggle-terminal
     .ssh/config
     .config/systemd/user/ssh-agent.service
     .claude/CLAUDE.md

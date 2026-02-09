@@ -69,6 +69,9 @@ floating_modifier $mod normal
 # Start a terminal
 bindsym $mod+Return exec kitty
 
+# Terminal workspace (toggle with $mod+`)
+bindsym $mod+grave exec ~/.local/bin/toggle-terminal
+
 # Kill focused window
 bindsym $mod+Shift+q kill
 
@@ -198,6 +201,7 @@ client.unfocused        #1d2021 #1d2021 #665c54 #1d2021   #1d2021
 client.urgent           #fb4934 #fb4934 #ebdbb2 #fb4934   #fb4934
 
 bar {
+  strip_workspace_numbers yes
   colors {
     background #1d2021
     statusline #ebdbb2

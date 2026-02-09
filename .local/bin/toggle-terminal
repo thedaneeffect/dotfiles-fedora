@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+JQ="$HOME/.local/share/mise/shims/jq"
+WS="0:~"
+
+current=$(swaymsg -t get_workspaces | "$JQ" -r '.[] | select(.focused) | .name')
+if [ "$current" = "$WS" ]; then
+    swaymsg workspace back_and_forth
+else
+    swaymsg workspace "$WS"
+    # Spawn kitty if workspace is empty
+    nodes=$(swaymsg -t get_tree | "$JQ" \
+        '[.. | select(.type? == "workspace" and .name == "'"$WS"'") | .nodes[], .floating_nodes[]] | length')
+    if [ "${nodes:-0}" -eq 0 ]; then
+        swaymsg exec kitty
+    fi
+fi

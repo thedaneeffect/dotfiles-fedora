@@ -57,5 +57,5 @@ disk "/" {
 }
 
 tztime local {
-        format = "%a %b %d  %H:%M"
+        format = "%d-%b-%Y %H:%M"
 }
