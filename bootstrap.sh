@@ -70,6 +70,7 @@ files=(
     .ssh/config
     .config/systemd/user/ssh-agent.service
     .claude/CLAUDE.md
+    .claude/skills/fedora/SKILL.md
 )
 
 for f in "${files[@]}"; do
@@ -122,6 +123,15 @@ if ! command -v cliphist &>/dev/null; then
     echo "==> Installing cliphist..."
     go install go.senan.xyz/cliphist@latest
     mise reshim
+fi
+
+# ============================================================================
+# Fedora docs (for /fedora skill)
+# ============================================================================
+if [ ! -d "$HOME/.local/share/fedora-docs/quick-docs" ]; then
+    echo "==> Cloning Fedora quick-docs..."
+    git clone --depth 1 https://pagure.io/fedora-docs/quick-docs.git \
+        "$HOME/.local/share/fedora-docs/quick-docs"
 fi
 
 # ============================================================================

@@ -2,6 +2,7 @@
 # See `man 5 sway` for a complete reference
 
 set $mod Mod4
+set $lock swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill
 
 # Font for window titles and bar
 font pango:ProggyCleanTT 12
@@ -11,14 +12,18 @@ exec dex-autostart --autostart --environment sway
 exec lxpolkit
 exec gnome-keyring-daemon --start --components=secrets,pkcs11
 exec mako
+exec systemctl --user restart xdg-desktop-portal-gtk.service
 exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
 
 # Idle/lock (replaces xss-lock + i3lock)
 exec swayidle -w \
-    timeout 300 'swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill' \
+    timeout 300 '$lock' \
     timeout 600 'swaymsg "output * power off"' \
     resume 'swaymsg "output * power on"' \
-    before-sleep 'swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill'
+    before-sleep '$lock'
+
+# Manual lock
+bindsym $mod+Home exec $lock
 
 # NetworkManager applet (--indicator needed for Wayland tray)
 exec nm-applet --indicator
