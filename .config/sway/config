@@ -56,7 +56,7 @@ bindsym XF86MonBrightnessUp exec brightnessctl set +5% && B=$(brightnessctl -m |
 bindsym XF86MonBrightnessDown exec brightnessctl set 5%- && B=$(brightnessctl -m | grep -oP '\d+(?=%)') && notify-send -r 1001 -u low -h int:value:$B "Brightness: $B%"
 
 # Capture menu (screenshots + recording)
-for_window [app_id="capture-menu"] floating enable, resize set 400 300, move position center
+for_window [app_id="capture-menu"] floating enable, resize set 340 220, move position center
 bindsym Print exec ~/.local/bin/capture-menu
 
 # Use Mouse+$mod to drag floating windows
@@ -200,3 +200,5 @@ bar {
   }
   status_command i3status
 }
+
+for_window [app_id="mpv"] floating enable

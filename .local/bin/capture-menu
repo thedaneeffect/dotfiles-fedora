@@ -3,7 +3,6 @@ set -euo pipefail
 
 SCREENSHOTS_DIR="$HOME/pictures/screenshots"
 RECORDINGS_DIR="$HOME/videos/recordings"
-STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/capture-last"
 CHOICE_FILE=/tmp/capture-choice
 GEOM_FILE=/tmp/capture-window-geom
 GUM="$HOME/.local/share/mise/shims/gum"
@@ -11,47 +10,35 @@ JQ="$HOME/.local/share/mise/shims/jq"
 
 # --- TUI mode: just render menu, write choice, exit ---
 if [[ "${1:-}" == "--tui" ]]; then
+    tput civis
+    trap 'tput cnorm' EXIT
     rm -f "$CHOICE_FILE"
 
-    LAST=""
-    [[ -f "$STATE_FILE" ]] && LAST=$(<"$STATE_FILE") || true
-
-    options=(
-        "Screenshot - Fullscreen"
-        "Screenshot - Window"
-        "Screenshot - Region"
-        "Record - Fullscreen"
-        "Record - Window"
-        "Record - Region"
-    )
-
-    menu=""
-    for i in "${!options[@]}"; do
-        n=$((i + 1))
-        marker="  "
-        [[ "$LAST" == "$n" ]] && marker="> " || true
-        menu+="${marker}${n}. ${options[$i]}"$'\n'
-    done
+    menu_h=12  # 6 options + 2 border + 4 padding
+    menu_w=33  # longest line + 4 padding + 2 border
+    term_h=$(tput lines)
+    term_w=$(tput cols)
+    top=$(( (term_h - menu_h) / 2 ))
+    left=$(( (term_w - menu_w) / 2 ))
+    [[ $top -lt 0 ]] && top=0
+    [[ $left -lt 0 ]] && left=0
 
     "$GUM" style \
         --border rounded \
         --border-foreground 142 \
         --foreground 223 \
-        --padding "0 1" \
-        --margin "0" \
-        "$menu"
+        --padding "2 2" \
+        --margin "$top 0 0 $left" \
+        "1. Screenshot - Fullscreen" \
+        "2. Screenshot - Window" \
+        "3. Screenshot - Region" \
+        "4. Record - Fullscreen" \
+        "5. Record - Window" \
+        "6. Record - Region"
 
     read -rsn1 key
-
-    # Enter re-runs last selection
-    if [[ "$key" == "" && -n "$LAST" ]]; then
-        key="$LAST"
-    fi
-
     [[ "$key" =~ ^[1-6]$ ]] || exit 0
-
     echo "$key" > "$CHOICE_FILE"
-    echo "$key" > "$STATE_FILE"
     exit 0
 fi
 
@@ -64,7 +51,7 @@ if pgrep -x wf-recorder > /dev/null; then
     exit 0
 fi
 
-mkdir -p "$SCREENSHOTS_DIR" "$RECORDINGS_DIR" "$(dirname "$STATE_FILE")"
+mkdir -p "$SCREENSHOTS_DIR" "$RECORDINGS_DIR"
 
 # Save focused window geometry while correct window is focused
 swaymsg -t get_tree | "$JQ" -r '.. | select(.focused?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' > "$GEOM_FILE"
