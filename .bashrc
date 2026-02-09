@@ -28,6 +28,8 @@ export EDITOR=hx
 export TERMINAL=kitty
 export MANPAGER="bat -l man -p"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+ssh-add -l &>/dev/null
+[ $? -eq 1 ] && ssh-add 2>/dev/null
 export XCURSOR_THEME=phinger-cursors-gruvbox-material
 export XCURSOR_SIZE=24
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
