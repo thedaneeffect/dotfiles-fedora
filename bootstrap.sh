@@ -57,6 +57,7 @@ files=(
     .config/gtk-3.0/settings.ini
     .config/gtk-4.0/settings.ini
     .config/kanshi/config
+    .config/swaylock/config
     .config/mpv/mpv.conf
     .local/bin/fzf-launcher
     .local/bin/fzf-launcher-preview

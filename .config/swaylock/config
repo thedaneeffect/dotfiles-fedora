@@ -1,0 +1,29 @@
+font=Terminus
+font-size=14
+
+# Indicator
+indicator-radius=80
+indicator-thickness=8
+indicator-caps-lock
+
+# Gruvbox colors
+inside-color=1d202100
+inside-ver-color=1d2021ee
+inside-wrong-color=1d2021ee
+inside-clear-color=1d2021ee
+
+ring-color=504945ff
+ring-ver-color=fe8019ff
+ring-wrong-color=cc241dff
+ring-clear-color=fabd2fff
+separator-color=00000000
+
+key-hl-color=fe8019ff
+bs-hl-color=cc241dff
+
+text-color=ebdbb2ff
+text-ver-color=ebdbb2ff
+text-wrong-color=fb4934ff
+text-clear-color=fabd2fff
+
+line-uses-inside
