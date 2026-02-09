@@ -4,6 +4,7 @@
 
 cmd="$1"
 TLDR="$HOME/.local/share/mise/shims/tldr"
+JQ="$HOME/.local/share/mise/shims/jq"
 CACHE_DIR="$HOME/.cache/fzf-launcher"
 DESKTOP_DIRS=("$HOME/.local/share/applications" /usr/share/applications /var/lib/flatpak/exports/share/applications)
 
@@ -65,14 +66,14 @@ if [ -f "$cache_file" ] && [ -n "$(find "$cache_file" -mtime -7 2>/dev/null)" ];
 fi
 
 result=$(curl -s --max-time 3 "https://api.duckduckgo.com/?q=$cmd+linux+command&format=json&no_html=1" 2>/dev/null)
-abstract=$(echo "$result" | jq -r '.AbstractText // empty' 2>/dev/null)
+abstract=$(echo "$result" | "$JQ" -r '.AbstractText // empty' 2>/dev/null)
 
 if [ -n "$abstract" ]; then
     {
         echo "$cmd"
         echo
         echo "$abstract"
-        source_url=$(echo "$result" | jq -r '.AbstractURL // empty' 2>/dev/null)
+        source_url=$(echo "$result" | "$JQ" -r '.AbstractURL // empty' 2>/dev/null)
         [ -n "$source_url" ] && echo && echo "Source: $source_url"
     } | tee "$cache_file"
     exit 0

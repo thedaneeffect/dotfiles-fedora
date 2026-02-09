@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+CLIPHIST="$HOME/.local/share/mise/shims/cliphist"
+FZF="$HOME/.local/share/mise/shims/fzf"
+SELECTION_FILE=/tmp/cliphist-selection
+
+# --- TUI mode: pick and write to file, exit ---
+if [[ "${1:-}" == "--tui" ]]; then
+    rm -f "$SELECTION_FILE"
+    selected=$("$CLIPHIST" list | "$FZF" --no-sort) || exit 0
+    [ -n "$selected" ] || exit 0
+    echo "$selected" | "$CLIPHIST" decode > "$SELECTION_FILE"
+    exit 0
+fi
+
+# --- Orchestrator mode (called by sway binding) ---
+kitty --class cliphist-fzf ~/.local/bin/cliphist-fzf --tui
+
+[[ -f "$SELECTION_FILE" ]] || exit 0
+wl-copy < "$SELECTION_FILE"
+rm -f "$SELECTION_FILE"

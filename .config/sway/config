@@ -11,13 +11,14 @@ exec dex-autostart --autostart --environment sway
 exec lxpolkit
 exec gnome-keyring-daemon --start --components=secrets,pkcs11
 exec mako
+exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
 
 # Idle/lock (replaces xss-lock + i3lock)
 exec swayidle -w \
-    timeout 300 'swaylock -f' \
+    timeout 300 'swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill' \
     timeout 600 'swaymsg "output * power off"' \
     resume 'swaymsg "output * power on"' \
-    before-sleep 'swaylock -f'
+    before-sleep 'swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill'
 
 # NetworkManager applet (--indicator needed for Wayland tray)
 exec nm-applet --indicator
@@ -33,9 +34,12 @@ input * xkb_options altwin:swap_alt_win
 bindsym XF86Favorites exec ~/.local/bin/random-wallpaper
 exec_always swaymsg "output * bg $HOME/.cache/wallpaper.jpg fill"
 
-# Dark theme
+# Dark theme + cursor
 exec gsettings set org.gnome.desktop.interface color-scheme prefer-dark
 exec gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
+exec gsettings set org.gnome.desktop.interface cursor-theme phinger-cursors-gruvbox-material
+exec gsettings set org.gnome.desktop.interface cursor-size 24
+seat * xcursor_theme phinger-cursors-gruvbox-material 24
 
 # Touchpad: natural scrolling (replaces xinput set-prop)
 input type:touchpad natural_scroll enabled
@@ -70,7 +74,9 @@ bindsym $mod+Shift+q kill
 
 # Application launcher (fzf in floating kitty)
 for_window [app_id="fzf-launcher"] floating enable, resize set 70 ppt 80 ppt, move position center
+for_window [app_id="cliphist-fzf"] floating enable, resize set 70 ppt 80 ppt, move position center
 bindsym $mod+d exec kitty --class fzf-launcher ~/.local/bin/fzf-launcher
+bindsym $mod+Shift+c exec ~/.local/bin/cliphist-fzf
 bindsym $mod+Shift+d exec ~/.local/bin/dmenu-new-workspace
 
 # Change focus
@@ -97,9 +103,16 @@ bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
 
-# Split orientation
-bindsym $mod+h split h
-bindsym $mod+v split v
+# Mac-style shortcuts (physical Alt = $mod via altwin:swap_alt_win)
+bindsym $mod+a exec wtype -M ctrl -P a -m ctrl
+bindsym $mod+c exec wtype -M ctrl -P c -m ctrl
+bindsym $mod+v exec wtype -M ctrl -P v -m ctrl
+bindsym $mod+x exec wtype -M ctrl -P x -m ctrl
+bindsym $mod+z exec wtype -M ctrl -P z -m ctrl
+
+# Split orientation ( | vertical divider, _ horizontal divider)
+bindsym $mod+bar split h
+bindsym $mod+underscore split v
 
 # Fullscreen
 bindsym $mod+f fullscreen toggle
@@ -116,7 +129,7 @@ bindsym $mod+Shift+space floating toggle
 bindsym $mod+space focus mode_toggle
 
 # Focus parent container
-bindsym $mod+a focus parent
+bindsym $mod+p focus parent
 
 # Workspaces
 set $ws1 "1"
@@ -154,9 +167,7 @@ bindsym $mod+Shift+8 move container to workspace number $ws8
 bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
 
-# Reload config
-bindsym $mod+Shift+c reload
-# Sway doesn't have in-place restart like i3, reload is equivalent
+# Reload config (Sway doesn't have in-place restart like i3, reload is equivalent)
 bindsym $mod+Shift+r reload
 # Exit sway (replaces i3-nagbar)
 bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'

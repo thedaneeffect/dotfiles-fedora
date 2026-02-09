@@ -64,6 +64,7 @@ files=(
     .local/bin/set-wallpaper
     .local/bin/save-wallpaper
     .local/bin/capture-menu
+    .local/bin/cliphist-fzf
     .ssh/config
     .config/systemd/user/ssh-agent.service
     .claude/CLAUDE.md
@@ -111,6 +112,25 @@ fi
 echo "==> Installing mise tools..."
 mise trust "$DOTFILES/.config/mise/config.toml"
 mise install
+
+# ============================================================================
+# cliphist (clipboard history)
+# ============================================================================
+if ! command -v cliphist &>/dev/null; then
+    echo "==> Installing cliphist..."
+    go install go.senan.xyz/cliphist@latest
+    mise reshim
+fi
+
+# ============================================================================
+# Cursor theme
+# ============================================================================
+if [ ! -d "$HOME/.icons/phinger-cursors-gruvbox-material" ]; then
+    echo "==> Installing cursor theme..."
+    mkdir -p "$HOME/.icons"
+    curl -sL https://github.com/rehanzo/phinger-cursors-gruvbox-material/releases/latest/download/phinger-cursors-variants.tar.bz2 \
+        | tar xfj - -C "$HOME/.icons"
+fi
 
 # ============================================================================
 # Proton Pass CLI

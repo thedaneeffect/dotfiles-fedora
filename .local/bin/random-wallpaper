@@ -3,7 +3,8 @@
 # Skips images we've already seen (up to 10 retries)
 WALLPAPER_DIR="$HOME/pictures/wallpapers"
 CACHE="$HOME/.cache/wallpaper.jpg"
-read -r W H < <(swaymsg -t get_outputs | jq -r '.[0] | "\(.current_mode.width) \(.current_mode.height)"')
+JQ="$HOME/.local/share/mise/shims/jq"
+read -r W H < <(swaymsg -t get_outputs | "$JQ" -r '.[0] | "\(.current_mode.width) \(.current_mode.height)"')
 W=$((W * 2))
 H=$((H * 2))
 
