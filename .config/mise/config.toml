@@ -6,7 +6,6 @@ fzf = "latest"
 gh = "latest"
 go = "latest"
 helix = "latest"
-rust = "latest"
 rg = "latest"
 bat = "latest"
 starship = "latest"
@@ -24,6 +23,8 @@ jq = "latest"
 duf = "latest"
 delta = "latest"
 gum = "latest"
+cmake = "latest"
+ninja = "latest"
 
 [settings]
 

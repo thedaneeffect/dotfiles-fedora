@@ -14,6 +14,7 @@ exec gnome-keyring-daemon --start --components=secrets,pkcs11
 exec mako
 exec systemctl --user restart xdg-desktop-portal-gtk.service
 exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
+exec $HOME/.local/share/cargo/bin/autotiling-rs
 
 # Idle/lock (replaces xss-lock + i3lock)
 exec swayidle -w \
@@ -200,7 +201,7 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 
 # Gruvbox Dark Hard Contrast
-client.focused          #8ec07c #8ec07c #1d2021 #fabd2f   #8ec07c
+client.focused          #fe8019 #fe8019 #1d2021 #fabd2f   #fe8019
 client.focused_inactive #3c3836 #3c3836 #a89984 #3c3836   #3c3836
 client.unfocused        #1d2021 #1d2021 #665c54 #1d2021   #1d2021
 client.urgent           #fb4934 #fb4934 #ebdbb2 #fb4934   #fb4934
@@ -212,7 +213,7 @@ bar {
     statusline #ebdbb2
     separator  #665c54
 
-    focused_workspace  #8ec07c #8ec07c #1d2021
+    focused_workspace  #fe8019 #fe8019 #1d2021
     active_workspace   #504945 #504945 #ebdbb2
     inactive_workspace #1d2021 #1d2021 #a89984
     urgent_workspace   #fb4934 #fb4934 #ebdbb2

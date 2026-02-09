@@ -14,7 +14,7 @@ sudo dnf install -y \
     mako \
     i3status \
     grim slurp wtype wl-clipboard wf-recorder ffmpeg \
-    distrobox git procs \
+    distrobox git procs trash-cli clang \
     https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
     https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
 
@@ -69,6 +69,8 @@ files=(
     .local/bin/new-terminal
     .ssh/config
     .config/systemd/user/ssh-agent.service
+    .config/systemd/user/trash-purge.service
+    .config/systemd/user/trash-purge.timer
     .claude/CLAUDE.md
     .claude/skills/fedora/SKILL.md
 )
@@ -104,6 +106,7 @@ done
 echo "==> Enabling SSH agent..."
 systemctl --user daemon-reload
 systemctl --user enable --now ssh-agent.service
+systemctl --user enable --now trash-purge.timer
 
 # ============================================================================
 # mise
@@ -115,6 +118,14 @@ fi
 echo "==> Installing mise tools..."
 mise trust "$DOTFILES/.config/mise/config.toml"
 mise install
+
+# ============================================================================
+# autotiling-rs
+# ============================================================================
+if [ ! -f "$HOME/.local/share/cargo/bin/autotiling-rs" ]; then
+    echo "==> Installing autotiling-rs..."
+    cargo install --git https://github.com/ammgws/autotiling-rs
+fi
 
 # ============================================================================
 # cliphist (clipboard history)

@@ -26,6 +26,7 @@ export USQL_HISTORY="$XDG_STATE_HOME/usql/history"
 # ============================================================================
 export EDITOR=hx
 export TERMINAL=kitty
+export BAT_THEME=gruvbox-dark
 export MANPAGER="bat -l man -p"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 ssh-add -l &>/dev/null
@@ -33,6 +34,8 @@ ssh-add -l &>/dev/null
 export XCURSOR_THEME=phinger-cursors-gruvbox-material
 export XCURSOR_SIZE=24
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
 export PATH="$XDG_DATA_HOME/cargo/bin:$PATH"
 export PATH="$HOME/go/bin:$PATH"
 
@@ -60,6 +63,9 @@ eval "$(starship init bash)"
 alias ..='cd ..'
 alias ...='cd ../..'
 alias .rc='. ~/.bashrc'
+
+# Safe delete (use \rm for real rm)
+alias rm='trash-put'
 
 # Modern replacements
 alias l='eza -la'
