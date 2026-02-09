@@ -47,7 +47,6 @@ fi
 # Toggle: if recording, stop it
 if pgrep -x wf-recorder > /dev/null; then
     pkill -SIGINT wf-recorder
-    notify-send -r 2000 -u low "Recording saved"
     exit 0
 fi
 
@@ -67,6 +66,7 @@ rm -f "$CHOICE_FILE"
 timestamp=$(date +%Y%m%d-%H%M%S)
 geom=$(<"$GEOM_FILE")
 
+# --- Screenshots ---
 case "$choice" in
     1)  file="$SCREENSHOTS_DIR/$timestamp.png"
         grim "$file"
@@ -83,29 +83,47 @@ case "$choice" in
         wl-copy -t image/png < "$file"
         notify-send -u low "Screenshot" "Region saved & copied"
         ;;
-    4)  raw="$RECORDINGS_DIR/$timestamp.mkv"
-        notify-send -r 2000 "Recording" "Fullscreen — Print to stop"
-        wf-recorder -c ffv1 -x bgr0 -f "$raw"
-        ;;
-    5)  raw="$RECORDINGS_DIR/$timestamp.mkv"
-        notify-send -r 2000 "Recording" "Window — Print to stop"
-        wf-recorder -c ffv1 -x bgr0 -g "$geom" -f "$raw"
-        ;;
-    6)  raw="$RECORDINGS_DIR/$timestamp.mkv"
-        region=$(slurp)
-        notify-send -r 2000 "Recording" "Region — Print to stop"
-        wf-recorder -c ffv1 -x bgr0 -g "$region" -f "$raw"
+    [4-6])
+        # --- Record (FFV1 lossless capture) ---
+        raw="$RECORDINGS_DIR/$timestamp.mkv"
+        case "$choice" in
+            4) notify-send -r 2000 "Recording" "Fullscreen — Print to stop"
+               wf-recorder -c ffv1 -x bgr0 -f "$raw" || true ;;
+            5) notify-send -r 2000 "Recording" "Window — Print to stop"
+               wf-recorder -c ffv1 -x bgr0 -g "$geom" -f "$raw" || true ;;
+            6) region=$(slurp)
+               notify-send -r 2000 "Recording" "Region — Print to stop"
+               wf-recorder -c ffv1 -x bgr0 -g "$region" -f "$raw" || true ;;
+        esac
+
+        # --- Convert to H.264 with Lanczos chroma downsampling ---
+        [[ -f "$raw" ]] || exit 0
+        out="${raw%.mkv}.mp4"
+        duration_us=$(ffprobe -v quiet -show_entries format=duration \
+            -of csv=p=0 "$raw" | sed 's/\.//' | cut -c1-9)
+        progress_file=$(mktemp)
+
+        ffmpeg -y -i "$raw" -c:v libx264 -crf 18 -preset fast \
+            -pix_fmt yuv420p -sws_flags lanczos+accurate_rnd+full_chroma_int \
+            -progress "$progress_file" "$out" 2>/dev/null &
+        pid=$!
+
+        while kill -0 "$pid" 2>/dev/null; do
+            us=$(grep -oP 'out_time_us=\K[0-9]+' "$progress_file" 2>/dev/null | tail -1) || true
+            if [[ -n "${us:-}" && "$duration_us" -gt 0 ]]; then
+                pct=$(( us * 100 / duration_us ))
+                notify-send -r 2000 -u low -h int:value:"$pct" "Converting" "${pct}%"
+            fi
+            sleep 0.5
+        done
+        wait "$pid" || true
+        rm -f "$progress_file"
+
+        if [[ -f "$out" && -s "$out" ]]; then
+            rm "$raw"
+            notify-send -r 2000 -u low "Recording saved" "$out"
+        else
+            notify-send -r 2000 "Convert failed" "Raw file kept: $raw"
+        fi
         ;;
 esac
-
-# Convert lossless capture to Discord-friendly VP9
-if [[ -n "${raw:-}" && -f "$raw" ]]; then
-    out="${raw%.mkv}.webm"
-    notify-send -r 2000 "Converting" "Encoding to VP9..."
-    ffmpeg -i "$raw" -c:v libvpx-vp9 -crf 4 -b:v 0 -pix_fmt yuv420p \
-        -sws_flags lanczos+accurate_rnd+full_chroma_int \
-        -deadline good -cpu-used 0 "$out" 2>/dev/null \
-        && rm "$raw" \
-        && notify-send -r 2000 -u low "Recording saved" "$out" \
-        || notify-send -r 2000 "Convert failed" "Raw file kept: $raw"
-fi

@@ -13,7 +13,7 @@ sudo dnf install -y \
     kitty \
     mako \
     i3status \
-    grim slurp wtype wl-clipboard wf-recorder \
+    grim slurp wtype wl-clipboard wf-recorder ffmpeg \
     distrobox git procs \
     https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
     https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
