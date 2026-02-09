@@ -83,17 +83,29 @@ case "$choice" in
         wl-copy -t image/png < "$file"
         notify-send -u low "Screenshot" "Region saved & copied"
         ;;
-    4)  file="$RECORDINGS_DIR/$timestamp.mp4"
+    4)  raw="$RECORDINGS_DIR/$timestamp.mkv"
         notify-send -r 2000 "Recording" "Fullscreen — Print to stop"
-        wf-recorder -c libx264 -p crf=18 -p preset=fast -f "$file"
+        wf-recorder -c ffv1 -x bgr0 -f "$raw"
         ;;
-    5)  file="$RECORDINGS_DIR/$timestamp.mp4"
+    5)  raw="$RECORDINGS_DIR/$timestamp.mkv"
         notify-send -r 2000 "Recording" "Window — Print to stop"
-        wf-recorder -c libx264 -p crf=18 -p preset=fast -g "$geom" -f "$file"
+        wf-recorder -c ffv1 -x bgr0 -g "$geom" -f "$raw"
         ;;
-    6)  file="$RECORDINGS_DIR/$timestamp.mp4"
+    6)  raw="$RECORDINGS_DIR/$timestamp.mkv"
         region=$(slurp)
         notify-send -r 2000 "Recording" "Region — Print to stop"
-        wf-recorder -c libx264 -p crf=18 -p preset=fast -g "$region" -f "$file"
+        wf-recorder -c ffv1 -x bgr0 -g "$region" -f "$raw"
         ;;
 esac
+
+# Convert lossless capture to Discord-friendly VP9
+if [[ -n "${raw:-}" && -f "$raw" ]]; then
+    out="${raw%.mkv}.webm"
+    notify-send -r 2000 "Converting" "Encoding to VP9..."
+    ffmpeg -i "$raw" -c:v libvpx-vp9 -crf 4 -b:v 0 -pix_fmt yuv420p \
+        -sws_flags lanczos+accurate_rnd+full_chroma_int \
+        -deadline good -cpu-used 0 "$out" 2>/dev/null \
+        && rm "$raw" \
+        && notify-send -r 2000 -u low "Recording saved" "$out" \
+        || notify-send -r 2000 "Convert failed" "Raw file kept: $raw"
+fi
