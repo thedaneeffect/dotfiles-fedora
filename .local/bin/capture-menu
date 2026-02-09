@@ -98,15 +98,15 @@ case "$choice" in
         ;;
     4)  file="$RECORDINGS_DIR/$timestamp.mp4"
         notify-send -r 2000 "Recording" "Fullscreen — Print to stop"
-        wf-recorder -f "$file"
+        wf-recorder -c libx264 -p crf=18 -p preset=fast -f "$file"
         ;;
     5)  file="$RECORDINGS_DIR/$timestamp.mp4"
         notify-send -r 2000 "Recording" "Window — Print to stop"
-        wf-recorder -g "$geom" -f "$file"
+        wf-recorder -c libx264 -p crf=18 -p preset=fast -g "$geom" -f "$file"
         ;;
     6)  file="$RECORDINGS_DIR/$timestamp.mp4"
         region=$(slurp)
         notify-send -r 2000 "Recording" "Region — Print to stop"
-        wf-recorder -g "$region" -f "$file"
+        wf-recorder -c libx264 -p crf=18 -p preset=fast -g "$region" -f "$file"
         ;;
 esac
