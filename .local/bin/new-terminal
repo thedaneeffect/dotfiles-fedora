@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+JQ="$HOME/.local/share/mise/shims/jq"
+
+# Get PID of focused window, find its child shell's CWD
+pid=$(swaymsg -t get_tree | "$JQ" '.. | select(.focused? == true and .pid?) | .pid')
+shell=$(pgrep -P "${pid:-0}" -x 'bash|zsh|fish' 2>/dev/null | head -1)
+cwd=$(readlink "/proc/${shell:-0}/cwd" 2>/dev/null)
+
+if [ -d "$cwd" ]; then
+    exec kitty -d "$cwd"
+else
+    exec kitty
+fi

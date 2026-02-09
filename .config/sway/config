@@ -67,7 +67,7 @@ bindsym Print exec ~/.local/bin/capture-menu
 floating_modifier $mod normal
 
 # Start a terminal
-bindsym $mod+Return exec kitty
+bindsym $mod+Return exec ~/.local/bin/new-terminal
 
 # Terminal workspace (toggle with $mod+`)
 bindsym $mod+grave exec ~/.local/bin/toggle-terminal
