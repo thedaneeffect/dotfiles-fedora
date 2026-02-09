@@ -26,7 +26,7 @@ export USQL_HISTORY="$XDG_STATE_HOME/usql/history"
 # ============================================================================
 export EDITOR=hx
 export TERMINAL=kitty
-export MANPAGER="sh -c 'col -b | bat -l man -p'"
+export MANPAGER="bat -l man -p"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 export PATH="$XDG_DATA_HOME/cargo/bin:$PATH"
