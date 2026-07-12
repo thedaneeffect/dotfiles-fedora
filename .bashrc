@@ -52,8 +52,10 @@ eval "$(mise activate bash)"
 eval "$(fzf --bash)"
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-eval "$(zoxide init --cmd cd bash)"
+# starship clobbers PROMPT_COMMAND, so zoxide must init after it -- otherwise
+# its directory-tracking hook is silently dropped and no dirs are ever recorded.
 eval "$(starship init bash)"
+eval "$(zoxide init --cmd cd bash)"
 
 # ============================================================================
 # Aliases
