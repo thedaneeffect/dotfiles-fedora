@@ -37,7 +37,7 @@ input * repeat_rate 30
 # Keyboard: swap alt and win (replaces setxkbmap -option altwin:swap_alt_win)
 input * xkb_options altwin:swap_alt_win
 
-# Wallpaper - restore last used, Fn key for random
+# Random wallpaper
 bindsym XF86Favorites exec ~/.local/bin/random-wallpaper
 exec_always swaymsg "output * bg $HOME/.cache/wallpaper.jpg fill"
 
@@ -55,8 +55,10 @@ input type:touchpad natural_scroll enabled
 default_border pixel 1
 hide_edge_borders smart
 
-# Volume controls (dunstify -> notify-send for mako compatibility)
+# Notifications go via notify-send (mako), not dunstify
 set $refresh_i3status killall -SIGUSR1 i3status
+
+# Volume controls
 bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status && V=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1) && notify-send -r 1000 -u low -h int:value:$V "Volume: $V%"
 bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status && V=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1) && notify-send -r 1000 -u low -h int:value:$V "Volume: $V%"
 bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status && notify-send -r 1000 -u low "Volume: Mute toggled"
@@ -76,7 +78,7 @@ floating_modifier $mod normal
 # Start a terminal
 bindsym $mod+Return exec ~/.local/bin/new-terminal
 
-# Terminal workspace (toggle with $mod+`)
+# Terminal workspace (toggle)
 bindsym $mod+grave exec ~/.local/bin/toggle-terminal
 
 # Quick calculator
@@ -86,9 +88,10 @@ bindsym $mod+equal exec kitty --app-id calc python3 -ic 'from math import *'
 # Kill focused window
 bindsym $mod+Shift+q kill
 
-# Application launcher (fzf in floating kitty)
 for_window [app_id="fzf-launcher"] floating enable, resize set 70 ppt 80 ppt, move position center
 for_window [app_id="cliphist-fzf"] floating enable, resize set 70 ppt 80 ppt, move position center
+
+# Application launcher
 bindsym $mod+d exec kitty --class fzf-launcher ~/.local/bin/fzf-launcher
 
 # Clipboard history
@@ -97,42 +100,45 @@ bindsym $mod+Shift+c exec ~/.local/bin/cliphist-fzf
 # New named workspace
 bindsym $mod+Shift+d exec ~/.local/bin/dmenu-new-workspace
 
-# Keybinding cheatsheet (searchable, parsed from this file at runtime)
 for_window [app_id="keybinds"] floating enable, resize set 80 ppt 80 ppt, move position center
+
+# Keybinding cheatsheet
 bindsym $mod+slash exec kitty --app-id keybinds -o background_opacity=1 ~/.local/bin/sway-keybinds
 
-# Change focus
+# Focus window (vim keys)
 bindsym $mod+j focus left
 bindsym $mod+k focus down
-bindsym $mod+l exec wtype -M ctrl -P l -m ctrl
 bindsym $mod+semicolon focus right
 
-# Alternatively, use cursor keys
+# Focus window (arrow keys)
 bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
 bindsym $mod+Right focus right
 
-# Move focused window
+# Move window (vim keys)
 bindsym $mod+Shift+j move left
 bindsym $mod+Shift+k move down
 bindsym $mod+Shift+l move up
 bindsym $mod+Shift+semicolon move right
 
-# Alternatively, use cursor keys
+# Move window (arrow keys)
 bindsym $mod+Shift+Left move left
 bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
 
-# Mac-style shortcuts (physical Alt = $mod via altwin:swap_alt_win)
+# Physical Alt is $mod because of xkb_options altwin:swap_alt_win, so these
+# turn the Alt-labelled key into Ctrl for the focused app.
+# Mac-style editing shortcuts
 bindsym $mod+a exec wtype -M ctrl -P a -m ctrl
 bindsym $mod+c exec wtype -M ctrl -P c -m ctrl
 bindsym $mod+v exec wtype -M ctrl -P v -m ctrl
 bindsym $mod+x exec wtype -M ctrl -P x -m ctrl
 bindsym $mod+z exec wtype -M ctrl -P z -m ctrl
+bindsym $mod+l exec wtype -M ctrl -P l -m ctrl
 
-# Split orientation ( | vertical divider, _ horizontal divider)
+# Split orientation (the key's glyph mirrors the divider it creates)
 bindsym $mod+bar split h
 bindsym $mod+underscore split v
 
@@ -189,9 +195,11 @@ bindsym $mod+Shift+8 move container to workspace number $ws8
 bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
 
-# Reload config (Sway doesn't have in-place restart like i3, reload is equivalent)
+# Sway has no in-place restart like i3; reload is the equivalent
+# Reload config
 bindsym $mod+Shift+r reload
-# Exit sway (replaces i3-nagbar)
+
+# Exit sway
 bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
 
 # Resize mode
