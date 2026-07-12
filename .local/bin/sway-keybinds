@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# Searchable keybinding cheatsheet for sway.
+# Parses the live config at runtime, so it can never drift out of date.
+# Bound to $mod+slash; runs inside a floating kitty (app_id=keybinds).
+#
+# Keys are rendered in Emacs/Vim key notation: C- ctrl, M- alt, S- shift,
+# s- super. e.g. "bindsym $mod+Shift+q kill" displays as "A-S-q".
+set -euo pipefail
+
+FZF="$HOME/.local/share/mise/shims/fzf"
+CONFIG="${SWAY_CONFIG:-$HOME/.config/sway/config}"
+
+# xkb_options altwin:swap_alt_win means the key physically labelled Alt is the
+# one that sends Mod4, so $mod is shown as A- (the key actually pressed) rather
+# than the technically-correct s-/Super.
+MOD_PREFIX="A-"
+MOD_NAME="Alt"
+
+[[ -r "$CONFIG" ]] || { echo "cannot read sway config: $CONFIG" >&2; exit 1; }
+
+# Column widths. KEYS is fixed (its longest value, XF86MonBrightnessDown, is
+# bounded); SECTION and ACTION split whatever is left 50/50. Measured here in
+# the main body, where stdout is still the tty -- inside parse() it is a pipe.
+COLS=$(tput cols 2>/dev/null || echo 120)
+KEY_W=22
+avail=$(( COLS - 4 ))                  # fzf pointer gutter + scrollbar
+rem=$(( avail - KEY_W - 2 ))           # 2 single-space column separators
+(( rem < 40 )) && rem=40               # floor for very narrow terminals
+SECT_W=$(( rem / 2 ))
+ACT_W=$(( rem - SECT_W ))
+
+parse() {
+    awk -v modpfx="$MOD_PREFIX" -v modname="$MOD_NAME" \
+        -v kw="$KEY_W" -v sw="$SECT_W" -v aw="$ACT_W" '
+    BEGIN {
+        # X11 keysym names -> the character actually printed on the key.
+        ch["slash"]="/";       ch["backslash"]="\\";  ch["semicolon"]=";"
+        ch["apostrophe"]="\047"; ch["comma"]=",";     ch["period"]="."
+        ch["minus"]="-";       ch["equal"]="=";       ch["grave"]="`"
+        ch["bracketleft"]="["; ch["bracketright"]="]"
+        ch["bar"]="|";         ch["underscore"]="_";  ch["question"]="?"
+        ch["plus"]="+";        ch["colon"]=":";       ch["quotedbl"]="\""
+        ch["less"]="<";        ch["greater"]=">";     ch["asciitilde"]="~"
+        ch["exclam"]="!";      ch["at"]="@";          ch["numbersign"]="#"
+        ch["dollar"]="$";      ch["percent"]="%";     ch["asciicircum"]="^"
+        ch["ampersand"]="&";   ch["asterisk"]="*"
+        ch["parenleft"]="(";   ch["parenright"]=")"
+        ch["braceleft"]="{";   ch["braceright"]="}"
+        ch["space"]="Space"
+    }
+
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+
+    # Expand $vars by longest-token match; unknown vars are left verbatim.
+    function expand(s,   out, name) {
+        out = ""
+        while (match(s, /\$[A-Za-z_][A-Za-z0-9_]*/)) {
+            name = substr(s, RSTART + 1, RLENGTH - 1)
+            out = out substr(s, 1, RSTART - 1) (name in vars ? vars[name] : "$" name)
+            s = substr(s, RSTART + RLENGTH)
+        }
+        return out s
+    }
+
+    # "$mod+Shift+semicolon" -> "A-S-;"   Modifiers collapse to prefixes,
+    # the final keysym renders as its printed character where one exists.
+    function fmtkeys(s,   n, parts, i, t, out) {
+        n = split(s, parts, /\+/)
+        out = ""
+        for (i = 1; i <= n; i++) {
+            t = parts[i]
+            if      (t == "$mod" || t == "Mod4")     out = out modpfx
+            else if (t == "Shift")                   out = out "S-"
+            else if (t == "Ctrl" || t == "Control")  out = out "C-"
+            else if (t == "Mod1" || t == "Alt")      out = out "M-"
+            else if (t == "Super")                   out = out "s-"
+            else                                     out = out (t in ch ? ch[t] : t)
+        }
+        return out
+    }
+
+    # A comment line becomes the section label for the binds beneath it.
+    /^[ \t]*#/ {
+        c = trim($0); sub(/^#[ \t]*/, "", c)
+        section = c
+        next
+    }
+
+    /^[ \t]*set[ \t]+\$/ {
+        line = trim($0)
+        split(line, a, /[ \t]+/)
+        name = a[2]; sub(/^\$/, "", name)
+        val = line; sub(/^set[ \t]+\$[^ \t]+[ \t]+/, "", val); gsub(/"/, "", val)
+        # $mod is deliberately left unexpanded so fmtkeys() can prefix it.
+        if (name != "mod") vars[name] = val
+        next
+    }
+
+    /^[ \t]*mode[ \t]+"/ {
+        m = $0; sub(/^[ \t]*mode[ \t]+"/, "", m); sub(/".*/, "", m)
+        curmode = m
+        next
+    }
+    /^[ \t]*}/ { curmode = ""; next }
+
+    /^[ \t]*bindsym/ {
+        line = trim($0); sub(/^bindsym[ \t]+/, "", line)
+        while (line ~ /^--/) sub(/^--[^ \t]+[ \t]+/, "", line)   # --to-code, --release, ...
+
+        sp = index(line, " ")
+        if (sp == 0) next
+        keys = fmtkeys(substr(line, 1, sp - 1))
+        cmd  = expand(trim(substr(line, sp + 1)))
+
+        if (curmode != "") {
+            sect = curmode " mode"
+            keys = "[" curmode "] " keys
+        } else {
+            sect = expand(section)
+            gsub(/\$mod\+/, modpfx, sect)     # "toggle with $mod+`" -> "toggle with A-`"
+            gsub(/\$mod/, modname, sect)
+        }
+        if (length(sect) > sw) sect = substr(sect, 1, sw - 1) "…"   # keep columns aligned
+
+        short = cmd
+        sub(/^exec[ \t]+(--[^ \t]+[ \t]+)?/, "", short)          # "exec " is noise in a cheatsheet
+        if (length(short) > aw) short = substr(short, 1, aw - 1) "…"
+
+        # Trailing tab-separated field holds the full command for the preview pane.
+        printf "%-*s %-*s %-*s\t%s\n", kw, keys, sw, sect, aw, short, cmd
+    }
+    ' "$CONFIG"
+}
+
+header=$(printf '  %-*s %-*s %s' "$KEY_W" KEYS "$SECT_W" SECTION ACTION)
+
+parse | "$FZF" \
+    --prompt='binds: ' \
+    --layout=reverse \
+    --no-info \
+    --no-sort \
+    --delimiter='\t' \
+    --with-nth=1 \
+    --bind 'change:first' \
+    --bind 'esc:abort,enter:abort' \
+    --header="$header" \
+    --header-first \
+    --preview 'printf "%s\n" {2}' \
+    --preview-window='down,5,wrap,border-top' \
+    --color='bg:#1d2021,fg:#ebdbb2,hl:#8ec07c,bg+:#3c3836,fg+:#ebdbb2,hl+:#8ec07c,prompt:#fabd2f,pointer:#fb4934,marker:#b8bb26,header:#a89984' \
+    >/dev/null

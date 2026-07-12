@@ -90,8 +90,16 @@ bindsym $mod+Shift+q kill
 for_window [app_id="fzf-launcher"] floating enable, resize set 70 ppt 80 ppt, move position center
 for_window [app_id="cliphist-fzf"] floating enable, resize set 70 ppt 80 ppt, move position center
 bindsym $mod+d exec kitty --class fzf-launcher ~/.local/bin/fzf-launcher
+
+# Clipboard history
 bindsym $mod+Shift+c exec ~/.local/bin/cliphist-fzf
+
+# New named workspace
 bindsym $mod+Shift+d exec ~/.local/bin/dmenu-new-workspace
+
+# Keybinding cheatsheet (searchable, parsed from this file at runtime)
+for_window [app_id="keybinds"] floating enable, resize set 80 ppt 80 ppt, move position center
+bindsym $mod+slash exec kitty --app-id keybinds -o background_opacity=1 ~/.local/bin/sway-keybinds
 
 # Change focus
 bindsym $mod+j focus left
