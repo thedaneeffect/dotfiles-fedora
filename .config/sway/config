@@ -8,15 +8,20 @@ set $lock swaylock -f -i ~/.cache/wallpaper.jpg --scaling fill
 font pango:ProggyCleanTT 12
 
 # Autostart
-exec dex-autostart --autostart --environment sway
+#
+# The session env must reach systemd and D-Bus before anything can D-Bus-activate a
+# portal; otherwise xdg-desktop-portal starts with no WAYLAND_DISPLAY, dies on "cannot
+# open display", and caches a last-resort backend (which loses ScreenCast entirely).
+# sway runs `exec` lines concurrently, so dex-autostart is chained after the import
+# rather than racing it -- it launches XDG autostart entries, which is what was
+# activating the portal too early.
+exec systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && \
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && \
+    dex-autostart --autostart --environment sway
+
 exec lxpolkit
 exec gnome-keyring-daemon --start --components=secrets,pkcs11
 exec mako
-# Hand the session env to systemd and D-Bus. Without this, D-Bus-activated services
-# (notably xdg-desktop-portal-*) start with no WAYLAND_DISPLAY and die on "cannot open
-# display". Portals are activated on demand, so there is nothing to restart by hand.
-exec systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
-exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
 exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
 exec $HOME/.local/share/cargo/bin/autotiling-rs
 exec kanshi

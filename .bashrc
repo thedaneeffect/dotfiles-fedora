@@ -52,10 +52,18 @@ eval "$(mise activate bash)"
 eval "$(fzf --bash)"
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# Prompt and directory-jumping are interactive-only. Without this guard they also load
+# in non-interactive shells (scripts, ssh commands, coding agents), where two things go
+# wrong: starship's PROMPT_COMMAND hook never fires, so zoxide's doctor thinks it was
+# clobbered and warns on every invocation; and `--cmd cd` overrides `cd` with a fuzzy
+# matcher, so a bad path can silently land somewhere else instead of failing.
+#
 # starship clobbers PROMPT_COMMAND, so zoxide must init after it -- otherwise
 # its directory-tracking hook is silently dropped and no dirs are ever recorded.
-eval "$(starship init bash)"
-eval "$(zoxide init --cmd cd bash)"
+if [[ $- == *i* ]]; then
+    eval "$(starship init bash)"
+    eval "$(zoxide init --cmd cd bash)"
+fi
 
 # ============================================================================
 # Aliases
