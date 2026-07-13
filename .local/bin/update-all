@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Update everything on this box: dnf packages, sideloaded Proton RPMs, mise tools, rust.
+# Each stage is independent: a failure is recorded and reported at the end, never fatal.
+set -uo pipefail
+
+# Proton ships these as unsigned RPMs with no repo, so dnf will never see updates for
+# them. They have to be re-fetched and compared by hand on every run.
+PROTON_APPS=(
+	"proton-pass|https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm"
+	"proton-mail|https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm"
+)
+
+FAILED=()
+bold=$(tput bold 2>/dev/null || :); dim=$(tput dim 2>/dev/null || :)
+red=$(tput setaf 1 2>/dev/null || :); grn=$(tput setaf 2 2>/dev/null || :)
+ylw=$(tput setaf 3 2>/dev/null || :); rst=$(tput sgr0 2>/dev/null || :)
+
+step() { printf '\n%s==>%s %s%s%s\n' "$grn" "$rst" "$bold" "$*" "$rst"; }
+info() { printf '    %s\n' "$*"; }
+warn() { printf '    %s%s%s\n' "$ylw" "$*" "$rst"; }
+fail() { printf '    %s%s%s\n' "$red" "$*" "$rst"; FAILED+=("$1"); }
+
+# Prompt for sudo once, then hold the timestamp alive so a long dnf run mid-script
+# doesn't stop to ask again. Killed on exit.
+sudo -v || { echo "sudo required" >&2; exit 1; }
+while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done 2>/dev/null &
+SUDO_KEEPALIVE=$!
+trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
+
+# ---------------------------------------------------------------- dnf
+step "dnf: system packages"
+if sudo dnf upgrade --refresh -y; then
+	info "system packages up to date"
+else
+	fail "dnf upgrade failed"
+fi
+
+# ---------------------------------------------------------------- proton
+step "proton: sideloaded RPMs"
+tmp=$(mktemp -d); trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; rm -rf "$tmp"' EXIT
+for entry in "${PROTON_APPS[@]}"; do
+	pkg=${entry%%|*}; url=${entry#*|}
+	rpm_file="$tmp/$pkg.rpm"
+
+	if ! curl -sfL --max-time 180 -o "$rpm_file" "$url"; then
+		fail "$pkg: download failed"
+		continue
+	fi
+
+	new=$(rpm -qp --qf '%{VERSION}-%{RELEASE}' "$rpm_file" 2>/dev/null)
+	if [[ -z $new ]]; then
+		fail "$pkg: downloaded file is not a valid RPM"
+		continue
+	fi
+	cur=$(rpm -q --qf '%{VERSION}-%{RELEASE}' "$pkg" 2>/dev/null) || cur="(not installed)"
+
+	if [[ $cur == "$new" ]]; then
+		info "$pkg $cur — already latest"
+		continue
+	fi
+
+	# --nogpgcheck because Proton does not sign these builds at all; the only trust
+	# anchor is TLS to proton.me. Nothing to verify against, so don't pretend to.
+	if sudo dnf install -y --nogpgcheck "$rpm_file"; then
+		info "$pkg $cur -> $new"
+	else
+		fail "$pkg: install failed"
+	fi
+done
+
+# ---------------------------------------------------------------- mise
+step "mise: dev tools"
+mise upgrade || fail "mise upgrade failed (see above; often stale aqua registry metadata)"
+
+# ---------------------------------------------------------------- rust
+step "rust: toolchain"
+rustup update || fail "rustup update failed"
+
+# ---------------------------------------------------------------- report
+step "summary"
+if ((${#FAILED[@]})); then
+	warn "${#FAILED[@]} stage(s) failed:"
+	printf '      - %s\n' "${FAILED[@]}"
+else
+	info "all stages succeeded"
+fi
+
+# The actually-useful end-of-run check. RPM scriptlets already run `systemctl
+# daemon-reload` when a unit file changes, so doing it here would be a no-op. What
+# nothing tells you is that you're still *running* the old kernel/glibc/systemd.
+step "restart check"
+if sudo dnf needs-restarting -r; then
+	info "no reboot required"
+else
+	warn "reboot required — run: systemctl reboot"
+fi
+
+((${#FAILED[@]} == 0))

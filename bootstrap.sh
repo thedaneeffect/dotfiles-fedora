@@ -69,6 +69,7 @@ files=(
     .local/bin/cliphist-fzf
     .local/bin/toggle-terminal
     .local/bin/new-terminal
+    .local/bin/update-all
     .ssh/config
     .config/systemd/user/ssh-agent.service
     .config/systemd/user/trash-purge.service
