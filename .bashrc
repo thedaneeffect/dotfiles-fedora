@@ -34,9 +34,7 @@ ssh-add -l &>/dev/null
 export XCURSOR_THEME=phinger-cursors-gruvbox-material
 export XCURSOR_SIZE=24
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
-export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
-export CARGO_HOME="$XDG_DATA_HOME/cargo"
-export PATH="$XDG_DATA_HOME/cargo/bin:$PATH"
+export PATH="$CARGO_HOME/bin:$PATH"   # CARGO_HOME/RUSTUP_HOME are set in the XDG block above
 export PATH="$HOME/go/bin:$PATH"
 
 # History

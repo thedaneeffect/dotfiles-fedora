@@ -69,12 +69,23 @@ for entry in "${PROTON_APPS[@]}"; do
 done
 
 # ---------------------------------------------------------------- mise
+# mise itself comes from its RPM repo, so the dnf stage above already updated it. Only
+# the managed tools are left. (A stale mise carries a stale aqua registry, which silently
+# breaks tool installs -- so the ordering here matters.)
 step "mise: dev tools"
-mise upgrade || fail "mise upgrade failed (see above; often stale aqua registry metadata)"
+if command -v mise >/dev/null; then
+	mise upgrade || fail "mise upgrade failed"
+else
+	warn "mise not installed — skipping"
+fi
 
 # ---------------------------------------------------------------- rust
 step "rust: toolchain"
-rustup update || fail "rustup update failed"
+if command -v rustup >/dev/null; then
+	rustup update || fail "rustup update failed"
+else
+	warn "rustup not installed — skipping"
+fi
 
 # ---------------------------------------------------------------- report
 step "summary"

@@ -6,8 +6,11 @@ DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 # ============================================================================
 # System packages
 # ============================================================================
-echo "==> Updating dnf and installing packages..."
-sudo dnf upgrade -y --refresh
+# The dnf upgrade and the sideloaded Proton RPMs used to live here. They are now
+# update-all's job, which this script calls at the end -- a fresh machine is just a
+# machine that is not current yet. Keeping the Proton URLs in one place means they
+# cannot rot in the copy nobody runs.
+echo "==> Installing packages..."
 sudo dnf install -y \
     sway swayidle swaylock swaybg \
     kitty \
@@ -15,9 +18,7 @@ sudo dnf install -y \
     i3status \
     grim slurp wtype wl-clipboard wf-recorder ffmpeg \
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
-    distrobox git procs trash-cli clang kanshi \
-    https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
-    https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm
+    distrobox git procs trash-cli clang kanshi
 
 # ============================================================================
 # Fonts
@@ -115,18 +116,43 @@ systemctl --user enable --now trash-purge.timer
 # ============================================================================
 # mise
 # ============================================================================
-if ! command -v mise &>/dev/null; then
-    echo "==> Installing mise..."
-    curl https://mise.run | sh
+# From the official mise RPM repo rather than `curl https://mise.run | sh`: packages are
+# GPG-signed, and dnf then keeps mise itself current. The curl installer has no
+# self-update path wired into anything, so mise silently rotted five months behind --
+# which broke tool installs, since a stale mise carries a stale aqua registry.
+if [ ! -f /etc/yum.repos.d/mise.repo ]; then
+    echo "==> Adding mise repo..."
+    sudo cp "$DOTFILES/system/mise.repo" /etc/yum.repos.d/mise.repo
 fi
+sudo dnf install -y mise
+
 echo "==> Installing mise tools..."
 mise trust "$DOTFILES/.config/mise/config.toml"
 mise install
 
 # ============================================================================
+# Rust
+# ============================================================================
+# Nothing here installed rustup before, so `cargo install` below would abort a fresh
+# bootstrap under `set -e`. It only ever worked because rustup had been installed by
+# hand, off the books.
+#
+# bootstrap does not source .bashrc, so the XDG paths it exports are not in scope here.
+# They have to be set explicitly or rustup drops the toolchain in ~/.cargo and ~/.rustup,
+# which is not where anything else on this system looks for it.
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
+export PATH="$CARGO_HOME/bin:$PATH"
+
+echo "==> Installing rustup..."
+sudo dnf install -y rustup
+rustup default stable   # idempotent; no-op once a toolchain is present
+
+# ============================================================================
 # autotiling-rs
 # ============================================================================
-if [ ! -f "$HOME/.local/share/cargo/bin/autotiling-rs" ]; then
+if [ ! -f "$CARGO_HOME/bin/autotiling-rs" ]; then
     echo "==> Installing autotiling-rs..."
     cargo install --git https://github.com/ammgws/autotiling-rs
 fi
@@ -176,6 +202,19 @@ if gum confirm "Install greetd + tuigreet login greeter?"; then
     sudo systemctl enable greetd.service
     echo "DONE  greetd configured"
 fi
+
+# ============================================================================
+# Bring everything current
+# ============================================================================
+# Deliberately last: update-all is symlinked onto PATH by the symlink step above, and it
+# expects mise and rustup to exist. It owns the dnf upgrade, the Proton RPMs, and the
+# toolchain updates, so this is also what installs Proton on a fresh box.
+#
+# `|| true` because this script is `set -e` while update-all exits non-zero if any single
+# stage failed. Without it a transient mise hiccup would abort the whole bootstrap at the
+# finish line; update-all prints its own summary of what failed.
+echo "==> Bringing everything up to date..."
+update-all || true
 
 echo
 echo "Done. Backed-up files have a .bak extension."
