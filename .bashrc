@@ -110,11 +110,31 @@ alias sudop='sudo env PATH="$PATH"'
 alias rc='$EDITOR ~/.bashrc'
 alias myip='curl -s ifconfig.me'
 alias ports='lsof -i -P -n | grep LISTEN'
-alias claude='claude --dangerously-skip-permissions'
 alias suspend='systemctl suspend'
 alias shutdown='systemctl poweroff'
 alias reboot='systemctl reboot'
 alias logout='swaymsg exit'
+
+# ============================================================================
+# Functions
+# ============================================================================
+
+# Warm the pane's background while Claude Code is running, so an agent session is
+# obvious at a glance and hard to confuse with a normal shell.
+#
+# OSC 11 sets the background and OSC 111 restores whatever kitty.conf configured, so
+# this needs no kitty remote control (which would mean opening a control socket just to
+# change a colour). Terminals that don't understand the sequences ignore them, and the
+# -t 1 guard keeps the escapes out of pipes and non-tty output.
+CLAUDE_TINT='#241e18'
+claude() {
+    local rc
+    [[ -t 1 ]] && printf '\033]11;%s\007' "$CLAUDE_TINT"
+    command claude --dangerously-skip-permissions "$@"
+    rc=$?
+    [[ -t 1 ]] && printf '\033]111\007'
+    return $rc
+}
 
 # ============================================================================
 # User specific aliases and functions
