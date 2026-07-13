@@ -6,11 +6,16 @@ DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 # ============================================================================
 # System packages
 # ============================================================================
-# The dnf upgrade and the sideloaded Proton RPMs used to live here. They are now
-# update-all's job, which this script calls at the end -- a fresh machine is just a
-# machine that is not current yet. Keeping the Proton URLs in one place means they
-# cannot rot in the copy nobody runs.
-echo "==> Installing packages..."
+# Upgrade before installing: fresh Fedora media is months stale, and installing onto an
+# un-upgraded base is how you end up with new packages pulling new deps against old core
+# libraries. update-all runs a second upgrade at the end, which is then a near-free no-op
+# -- `dnf upgrade` is idempotent, so this is not the kind of duplication that rots.
+#
+# The sideloaded Proton RPMs did used to live here, and those genuinely were: a URL is
+# data, and a stale copy in the file nobody runs fails silently. They are update-all's
+# job now, and it installs them on a fresh box too.
+echo "==> Updating dnf and installing packages..."
+sudo dnf upgrade -y --refresh
 sudo dnf install -y \
     sway swayidle swaylock swaybg \
     kitty \
