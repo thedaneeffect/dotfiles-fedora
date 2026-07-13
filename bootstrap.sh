@@ -14,6 +14,7 @@ sudo dnf install -y \
     mako \
     i3status \
     grim slurp wtype wl-clipboard wf-recorder ffmpeg \
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr \
     distrobox git procs trash-cli clang kanshi \
     https://proton.me/download/mail/linux/ProtonMail-desktop-beta.rpm \
     https://proton.me/download/PassDesktop/linux/x64/ProtonPass.rpm

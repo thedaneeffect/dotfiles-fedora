@@ -12,7 +12,11 @@ exec dex-autostart --autostart --environment sway
 exec lxpolkit
 exec gnome-keyring-daemon --start --components=secrets,pkcs11
 exec mako
-exec systemctl --user restart xdg-desktop-portal-gtk.service
+# Hand the session env to systemd and D-Bus. Without this, D-Bus-activated services
+# (notably xdg-desktop-portal-*) start with no WAYLAND_DISPLAY and die on "cannot open
+# display". Portals are activated on demand, so there is nothing to restart by hand.
+exec systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
 exec wl-paste --watch $HOME/.local/share/mise/shims/cliphist store
 exec $HOME/.local/share/cargo/bin/autotiling-rs
 exec kanshi
