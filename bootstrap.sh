@@ -150,9 +150,15 @@ export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 export PATH="$CARGO_HOME/bin:$PATH"
 
+# Fedora's `rustup` package ships /usr/bin/rustup-init -- the installer, not the tool.
+# Running it puts the real rustup/cargo/rustc under CARGO_HOME, which is the same end
+# state as upstream's `curl https://sh.rustup.rs | sh`, minus piping an unsigned script
+# to a shell. rustup then self-updates from there, as usual.
 echo "==> Installing rustup..."
 sudo dnf install -y rustup
-rustup default stable   # idempotent; no-op once a toolchain is present
+if ! command -v rustup &>/dev/null; then
+    rustup-init -y --no-modify-path   # .bashrc already owns PATH
+fi
 
 # ============================================================================
 # autotiling-rs
