@@ -135,10 +135,14 @@ claude() {
 }
 
 # ============================================================================
-# User specific aliases and functions
+# Local scripts
 # ============================================================================
-if [ -d ~/.bashrc.d ]; then
-    for rc in ~/.bashrc.d/*; do
+# Machine-local config that deliberately stays out of the dotfiles repo —
+# secrets, per-host tweaks, scratch experiments. This loader is synced; what
+# it sources is not. Unmatched globs stay literal, so the -f test also covers
+# the empty-directory case.
+if [ -d ~/.config/rc.d ]; then
+    for rc in ~/.config/rc.d/*.rc; do
         if [ -f "$rc" ]; then
             . "$rc"
         fi
