@@ -25,6 +25,7 @@ delta = "latest"
 gum = "latest"
 cmake = "latest"
 ninja = "latest"
+hcloud = "latest"
 
 [settings]
 
