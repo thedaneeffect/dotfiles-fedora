@@ -6,10 +6,20 @@ CACHE="$HOME/.cache/wallpaper.jpg"
 FZF="$HOME/.local/share/mise/shims/fzf"
 
 if [ -z "$1" ]; then
+    # Styling mirrors fzf-launcher so the picker matches $mod+d.
+    # --with-nth=-1 displays bare filenames while {} stays the full path,
+    # which the icat preview and the symlink below both need.
     match=$(find "$WALLPAPER_DIR" -maxdepth 1 \( -type f -o -type l \) | sort -V | \
-        "$FZF" --preview 'file={}; kitten icat --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$file"' \
-            --preview-window=right:60% \
-            --prompt="Wallpaper> ")
+        "$FZF" \
+            --prompt='wallpaper: ' \
+            --layout=reverse \
+            --no-info \
+            --bind 'change:first' \
+            --delimiter=/ \
+            --with-nth=-1 \
+            --preview 'file={}; kitten icat --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$file"' \
+            --preview-window='right,60%,wrap' \
+            --color='bg:#1d2021,fg:#ebdbb2,hl:#8ec07c,bg+:#3c3836,fg+:#ebdbb2,hl+:#8ec07c,prompt:#fabd2f,pointer:#fb4934,marker:#b8bb26')
     [ -z "$match" ] && exit 0
 else
     match=$(find "$WALLPAPER_DIR" -maxdepth 1 -name "$1.*" \( -type f -o -type l \) | head -1)

@@ -46,8 +46,9 @@ input * repeat_rate 30
 # Keyboard: swap alt and win (replaces setxkbmap -option altwin:swap_alt_win)
 input * xkb_options altwin:swap_alt_win
 
-# Random wallpaper
+# Wallpaper - bare star fetches random, $mod+star picks from saved
 bindsym XF86Favorites exec ~/.local/bin/random-wallpaper
+bindsym $mod+XF86Favorites exec kitty --class fzf-launcher ~/.local/bin/set-wallpaper
 exec_always swaymsg "output * bg $HOME/.cache/wallpaper.jpg fill"
 
 # Dark theme + cursor
